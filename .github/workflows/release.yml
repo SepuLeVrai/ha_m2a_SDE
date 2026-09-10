@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "custom_components/m2a_water/manifest.json"
+      - "docs/RELEASE_v*.md"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Publish GitHub release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read integration version
+        id: version
+        shell: bash
+        run: |
+          VERSION="$(python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path('custom_components/m2a_water/manifest.json').read_text())
+          print(manifest['version'])
+          PY
+          )"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Create release if missing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; nothing to do."
+            exit 0
+          fi
+
+          NOTES="docs/RELEASE_v${VERSION}.md"
+          if [ -f "$NOTES" ]; then
+            gh release create "$TAG" \
+              --target "$GITHUB_SHA" \
+              --title "m2A Eau $TAG" \
+              --notes-file "$NOTES"
+          else
+            gh release create "$TAG" \
+              --target "$GITHUB_SHA" \
+              --title "m2A Eau $TAG" \
+              --generate-notes
+          fi
