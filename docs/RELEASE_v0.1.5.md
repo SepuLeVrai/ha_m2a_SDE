@@ -43,4 +43,4 @@ Le manifest déclare explicitement la dépendance `recorder` et respecte l'ordre
 
 ## Publication
 
-Après merge sur `main`, la version attendue est `0.1.5`. Une GitHub Release taggée `v0.1.5` pourra être créée pour distribution propre via HACS.
+La branche `main` contient la version stable `0.1.5`. Le workflow de publication crée automatiquement la GitHub Release `v0.1.5` à partir de cette note de release si elle n'existe pas déjà.
