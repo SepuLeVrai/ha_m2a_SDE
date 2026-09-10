@@ -1,0 +1,76 @@
+{
+  "title": "m2A Water",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to m2A Water",
+        "description": "Connects to the Eaupla!/m2A SDE portal. Only the meter number you enter is retained; any unrelated subscription returned by the portal is discarded.",
+        "data": {
+          "username": "Login / email",
+          "password": "Password",
+          "counter_number": "Meter number"
+        },
+        "data_description": {
+          "counter_number": "Physical meter number shown in the m2A portal (for example ABC123456)."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reconnect to m2A Water",
+        "description": "Enter your current m2A credentials.",
+        "data": {
+          "username": "Login / email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the m2A service.",
+      "invalid_auth": "Invalid username or password.",
+      "counter_not_found": "This meter number was not found on the account.",
+      "unknown": "Unexpected error. Check the Home Assistant logs."
+    },
+    "abort": {
+      "already_configured": "This meter is already configured.",
+      "reauth_successful": "Reauthentication successful."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "meter_index": {
+        "name": "Official meter index"
+      },
+      "last_reading_date": {
+        "name": "Last telemetry reading"
+      },
+      "last_daily_consumption": {
+        "name": "Last daily consumption"
+      },
+      "month_consumption": {
+        "name": "Current month consumption"
+      },
+      "previous_year_same_period": {
+        "name": "Same period last year"
+      },
+      "evolution": {
+        "name": "Year-on-year change"
+      },
+      "average_daily": {
+        "name": "Daily average"
+      },
+      "previous_year_average_daily": {
+        "name": "Daily average last year"
+      },
+      "history_days": {
+        "name": "Historical days imported"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Refresh meter data"
+      },
+      "sync_history": {
+        "name": "Resync full history"
+      }
+    }
+  }
+}

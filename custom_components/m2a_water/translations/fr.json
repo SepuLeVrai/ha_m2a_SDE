@@ -1,0 +1,76 @@
+{
+  "title": "m2A Eau",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connexion au service des eaux m2A",
+        "description": "Connexion au portail Eaupla!/SDE de m2A. Seul le numéro de compteur saisi est conservé ; tout abonnement sans rapport renvoyé par le portail est immédiatement ignoré.",
+        "data": {
+          "username": "Identifiant / e-mail",
+          "password": "Mot de passe",
+          "counter_number": "Numéro du compteur"
+        },
+        "data_description": {
+          "counter_number": "Numéro physique affiché dans le portail m2A (par exemple ABC123456)."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reconnecter m2A Eau",
+        "description": "Saisissez vos identifiants m2A actuels.",
+        "data": {
+          "username": "Identifiant / e-mail",
+          "password": "Mot de passe"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossible de joindre le service m2A.",
+      "invalid_auth": "Identifiant ou mot de passe incorrect.",
+      "counter_not_found": "Ce numéro de compteur n'a pas été trouvé sur le compte.",
+      "unknown": "Erreur inattendue. Consultez les journaux Home Assistant."
+    },
+    "abort": {
+      "already_configured": "Ce compteur est déjà configuré.",
+      "reauth_successful": "Réauthentification réussie."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "meter_index": {
+        "name": "Index officiel"
+      },
+      "last_reading_date": {
+        "name": "Dernière télérelève"
+      },
+      "last_daily_consumption": {
+        "name": "Dernière consommation journalière"
+      },
+      "month_consumption": {
+        "name": "Consommation du mois"
+      },
+      "previous_year_same_period": {
+        "name": "Même période N-1"
+      },
+      "evolution": {
+        "name": "Évolution N / N-1"
+      },
+      "average_daily": {
+        "name": "Moyenne journalière"
+      },
+      "previous_year_average_daily": {
+        "name": "Moyenne journalière N-1"
+      },
+      "history_days": {
+        "name": "Jours d'historique importés"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Actualiser les données compteur"
+      },
+      "sync_history": {
+        "name": "Resynchroniser tout l'historique"
+      }
+    }
+  }
+}

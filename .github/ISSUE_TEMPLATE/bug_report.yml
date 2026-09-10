@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a problem with m2A Eau
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an issue.
+
+        **Never paste your password, JWT, cookies, session IDs, full API responses
+        containing personal data, or another subscriber's data.**
+
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.9.x"
+    validations:
+      required: true
+
+  - type: input
+    id: integration_version
+    attributes:
+      label: m2A Eau version
+      placeholder: "0.1.5"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: Installation method
+      options:
+        - HACS custom repository
+        - Manual
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe what happens and what you expected.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: |
+        Paste only logs related to custom_components.m2a_water.
+        Remove credentials, tokens, cookies and personal data first.
+      render: text
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I removed credentials, tokens, cookies and personal data.
+          required: true
+        - label: I searched existing issues before opening this one.
+          required: true

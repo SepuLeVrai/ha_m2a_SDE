@@ -1,0 +1,17 @@
+m2A Eau v0.1.5 - GitHub/HACS package quality checks
+========================================================
+
+Python syntax: OK
+JSON validity: OK
+HACS repository structure: OK
+Single integration repository: OK
+Manifest HACS required fields: OK
+Custom translation layout: OK
+Brand icon: OK
+No household credentials/PII: OK
+Repository metadata: OK
+Version consistency: OK
+
+Static validation performed locally.
+HACS Action and Hassfest are included and will run on GitHub after upload.
+No live m2A authentication/API request was performed during packaging.
