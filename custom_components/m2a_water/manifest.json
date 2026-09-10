@@ -1,17 +1,17 @@
 {
   "domain": "m2a_water",
   "name": "m2A Eau",
-  "version": "0.1.5",
-  "config_flow": true,
-  "documentation": "https://github.com/SepuLeVrai/ha_m2a_SDE",
-  "issue_tracker": "https://github.com/SepuLeVrai/ha_m2a_SDE/issues",
   "codeowners": [
     "@SepuLeVrai"
   ],
+  "config_flow": true,
   "dependencies": [
     "recorder"
   ],
+  "documentation": "https://github.com/SepuLeVrai/ha_m2a_SDE",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": []
+  "issue_tracker": "https://github.com/SepuLeVrai/ha_m2a_SDE/issues",
+  "requirements": [],
+  "version": "0.1.5"
 }
