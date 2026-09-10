@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here.
 
+## [0.1.6] - 2026-09-10
+
+### Added
+- New local Home Assistant integration icon for `m2A Eau`
+
+### Changed
+- Branding refreshed for clearer identification in Home Assistant and HACS
+- Removed the separate hDPI icon so Home Assistant falls back consistently to the new `icon.png`
+
 ## [0.1.5] - 2026-09-10
 
 ### CI / packaging fixes
