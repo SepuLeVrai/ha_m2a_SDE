@@ -1,0 +1,17 @@
+m2A Eau v0.1.5 - CI correction package
+================================================
+
+Python syntax: OK
+JSON validity: OK
+Recorder dependency: OK
+Repository documentation URL: OK
+Repository issue URL: OK
+HACS settings guide: OK
+No household/API secrets: OK
+
+Important: GitHub repository topics cannot be fixed by repository files.
+Add the topics listed in REPOSITORY_SETTINGS.md in the GitHub repository settings.
+
+Expected CI after repository topics are added:
+- HACS: all 9 checks pass
+- Hassfest: Recorder dependency error resolved
