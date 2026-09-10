@@ -2,13 +2,13 @@
 
 Target repository:
 
-`SepuLeVrai/ha-m2a-water`
+`SepuLeVrai/ha_m2a_SDE`
 
 ## 1. Create the GitHub repository
 
 Create a **public** GitHub repository named:
 
-`ha-m2a-water`
+`ha_m2a_SDE`
 
 Do not initialize it with another README or license if you are uploading this
 package as the initial content.
@@ -42,7 +42,7 @@ The repository root on GitHub must directly contain:
 - `CHANGELOG.md`
 - `LICENSE`
 
-Do not upload the outer `ha-m2a-water/` directory as a nested directory.
+Do not upload the outer `ha_m2a_SDE/` directory as a nested directory.
 
 ## 3. Check GitHub Actions
 
@@ -69,7 +69,7 @@ Use the 0.1.5 section from `CHANGELOG.md` as release notes.
 
 In HACS, open **Custom repositories** and add:
 
-`https://github.com/SepuLeVrai/ha-m2a-water`
+`https://github.com/SepuLeVrai/ha_m2a_SDE`
 
 Category:
 
@@ -89,3 +89,12 @@ For every stable version:
    (`v0.x.y` is fine as a release tag).
 
 HACS will then expose the new release as an update.
+
+## HACS topic validation
+
+The repository itself must have GitHub topics configured. Recommended:
+`home-assistant`, `hacs`, `water`, `water-meter`, `water-consumption`,
+`m2a`, `eaupla`, `mulhouse`, `france`.
+
+At least one non-generic topic such as `water`, `m2a`, or `eaupla` is required
+because HACS filters generic Home Assistant/HACS topics before validation.

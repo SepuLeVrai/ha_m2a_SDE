@@ -4,6 +4,11 @@ All notable changes to this project are documented here.
 
 ## [0.1.5] - 2026-09-10
 
+### CI / packaging fixes
+- Declared Home Assistant Recorder dependency required by Hassfest
+- Corrected documentation and issue tracker URLs for `SepuLeVrai/ha_m2a_SDE`
+- Added GitHub repository-topic guidance required by HACS
+
 ### Added
 - HACS-ready public repository structure
 - Complete Home Assistant manifest metadata

@@ -35,7 +35,7 @@ This repository can be used as a HACS custom repository.
 3. Open the menu and choose **Custom repositories**.
 4. Add:
 
-   `https://github.com/SepuLeVrai/ha-m2a-water`
+   `https://github.com/SepuLeVrai/ha_m2a_SDE`
 
 5. Select category **Integration**.
 6. Install **m2A Eau**.
