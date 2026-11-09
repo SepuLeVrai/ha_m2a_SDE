@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented here.
 
+## [0.1.7] - 2026-11-09
+
+### Added
+- Proactive m2A authentication renewal after 90 minutes to avoid the observed two-hour session timeout
+- Authentication lock to coalesce concurrent relogin attempts from polling and historical synchronization
+- Automatic detection of expired sessions returned as HTTP 401, 403, 419 or 440
+- Detection of redirects or HTML login pages returned in place of API JSON
+
+### Changed
+- Expired first-party session cookies are cleared before obtaining a fresh portal session and JWT
+- Authenticated API requests are replayed at most once after automatic relogin
+- Home Assistant reauthentication is now reserved for credentials explicitly rejected by the login endpoint
+- Temporary meter/session availability failures now remain retryable connection/update errors instead of prompting for credentials
+
 ## [0.1.6] - 2026-09-10
 
 ### Added
