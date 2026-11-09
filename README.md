@@ -13,6 +13,7 @@ des Eaux (SDE)** customer portal of Mulhouse Alsace Agglomération, France.
 - Authentication to the Eaupla!/m2A e-services portal
 - Strict meter selection by physical meter number
 - Hourly polling
+- Automatic session renewal before portal timeout, with transparent one-shot request replay
 - Manual **Refresh meter data** button
 - Official meter index
 - Last telemetry reading date
@@ -120,7 +121,8 @@ selected meter. This integration is deliberately defensive:
 - unrelated subscriptions are not exposed as Home Assistant entities;
 - raw subscription responses are not logged;
 - JWTs are held in memory and are not written to the integration configuration;
-- the integration automatically re-authenticates when required.
+- the integration automatically renews expired portal sessions using the credentials already stored in the Home Assistant Config Entry;
+- a Home Assistant reauthentication prompt is raised only when the portal explicitly rejects those stored credentials.
 
 Your username and password are stored in the Home Assistant Config Entry, like
 many cloud integrations. Protect your Home Assistant instance and backups.
