@@ -29,6 +29,12 @@ _BROWSER_USER_AGENT = (
     "Chrome/152.0.0.0 Safari/537.36"
 )
 
+# The observed first-party web session lives for about two hours. Renewing at
+# 90 minutes keeps normal polling away from the expiry boundary.
+_AUTH_REFRESH_SECONDS = 90 * 60
+_AUTH_FAILURE_STATUSES = {401, 403, 419, 440}
+_LOGIN_REDIRECT_STATUSES = {301, 302, 303, 307, 308}
+
 
 class M2AError(Exception):
     """Base exception for m2A Water."""
@@ -121,6 +127,8 @@ class M2AWaterApi:
         self._username = username
         self._password = password
         self._token: str | None = None
+        self._login_monotonic: float | None = None
+        self._auth_lock = asyncio.Lock()
         self._timeout = ClientTimeout(total=REQUEST_TIMEOUT_SECONDS)
 
     async def _prime_session(self) -> None:
@@ -167,8 +175,28 @@ class M2AWaterApi:
                 "Unable to initialize the m2A web session"
             ) from err
 
-    async def async_login(self) -> None:
-        """Authenticate and retain the JWT and first-party session cookie."""
+    def _auth_is_stale(self) -> bool:
+        """Return whether the current authentication should be renewed."""
+        if self._token is None or self._login_monotonic is None:
+            return True
+        age = asyncio.get_running_loop().time() - self._login_monotonic
+        return age >= _AUTH_REFRESH_SECONDS
+
+    def _clear_auth_state(self) -> None:
+        """Discard the JWT and all first-party cookies for the portal."""
+        self._token = None
+        self._login_monotonic = None
+
+        domain = URL(BASE_URL).host
+        if domain:
+            # The portal couples the JWT with its server-side session cookie.
+            # Clearing the whole first-party cookie jar avoids carrying a dead
+            # mulhouse_session into the next login attempt.
+            self._session.cookie_jar.clear_domain(domain)
+
+    async def _async_login_locked(self) -> None:
+        """Authenticate while the caller holds the authentication lock."""
+        self._clear_auth_state()
         await self._prime_session()
 
         payload = {
@@ -196,20 +224,18 @@ class M2AWaterApi:
                     "Sec-Fetch-Site": "same-origin",
                 },
                 timeout=self._timeout,
+                allow_redirects=False,
             ) as response:
                 if response.status in (401, 403):
                     await response.read()
                     _LOGGER.warning(
-                        "m2A login rejected credentials (HTTP %s)",
+                        "m2A login rejected stored credentials (HTTP %s)",
                         response.status,
                     )
                     raise M2AAuthError("Invalid m2A credentials")
 
                 if response.status == 422:
                     await response.read()
-                    _LOGGER.warning(
-                        "m2A login request was rejected by validation (HTTP 422)"
-                    )
                     raise M2AConnectionError(
                         "m2A login request validation failed (HTTP 422)"
                     )
@@ -217,6 +243,13 @@ class M2AWaterApi:
                 if response.status == 429:
                     await response.read()
                     raise M2AConnectionError("m2A API rate limit reached")
+
+                if response.status in _LOGIN_REDIRECT_STATUSES:
+                    location = response.headers.get("Location", "")
+                    await response.read()
+                    raise M2AConnectionError(
+                        f"m2A login unexpectedly redirected to {location or 'another page'}"
+                    )
 
                 if response.status >= 400:
                     await response.read()
@@ -234,7 +267,7 @@ class M2AWaterApi:
         if not token or not isinstance(token, str):
             keys = sorted(data.keys()) if isinstance(data, dict) else []
             _LOGGER.warning(
-                "m2A diagnostic: login returned HTTP 200 but no JWT token "
+                "m2A login returned HTTP 200 but no JWT token "
                 "(response keys: %s)",
                 keys,
             )
@@ -243,7 +276,8 @@ class M2AWaterApi:
             )
 
         self._token = token
-        _LOGGER.debug("m2A authentication succeeded and JWT was received")
+        self._login_monotonic = asyncio.get_running_loop().time()
+        _LOGGER.debug("m2A authentication session renewed")
 
         # The browser stores the same JWT as a first-party cookie in addition
         # to sending it in Authorization. Keep both mechanisms aligned.
@@ -251,6 +285,37 @@ class M2AWaterApi:
             {"frontendaccess_token": token},
             response_url=URL(BASE_URL),
         )
+
+    async def async_login(self) -> None:
+        """Force a fresh login using the credentials stored by Home Assistant."""
+        async with self._auth_lock:
+            await self._async_login_locked()
+
+    async def _async_ensure_authenticated(
+        self,
+        *,
+        force: bool = False,
+        failed_token: str | None = None,
+    ) -> None:
+        """Ensure a usable session, coalescing concurrent login attempts."""
+        if not force and not self._auth_is_stale():
+            return
+
+        async with self._auth_lock:
+            # Another request may already have refreshed the session while this
+            # coroutine was waiting for the lock. In that case, reuse it.
+            if (
+                failed_token is not None
+                and self._token is not None
+                and self._token != failed_token
+                and not self._auth_is_stale()
+            ):
+                return
+
+            if not force and not self._auth_is_stale():
+                return
+
+            await self._async_login_locked()
 
     async def _json(self, response: ClientResponse) -> Any:
         """Decode a JSON response with a useful error."""
@@ -267,14 +332,19 @@ class M2AWaterApi:
         params: dict[str, str] | None = None,
         retry_auth: bool = True,
     ) -> Any:
-        """Perform an authenticated request, with one re-login on 401/403."""
-        if self._token is None:
-            await self.async_login()
+        """Perform an authenticated request with one transparent session replay."""
+        # Renew before the observed two-hour session boundary. This also logs
+        # in lazily after startup if no token is present.
+        await self._async_ensure_authenticated()
+
+        token_used = self._token
+        if token_used is None:
+            raise M2AConnectionError("m2A authentication did not produce a token")
 
         headers = {
             "Accept": "application/json, text/plain, */*",
             "Accept-Language": "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7",
-            "Authorization": f"Bearer {self._token}",
+            "Authorization": f"Bearer {token_used}",
             "Origin": BASE_URL,
             "Referer": f"{BASE_URL}/services/sde",
             "Service": "undefined",
@@ -291,25 +361,49 @@ class M2AWaterApi:
                 params=params,
                 headers=headers,
                 timeout=self._timeout,
+                allow_redirects=False,
             ) as response:
-                if response.status in (401, 403):
+                location = response.headers.get("Location", "")
+                redirected_to_login = (
+                    response.status in _LOGIN_REDIRECT_STATUSES
+                    and "/login" in location.lower()
+                )
+                returned_login_page = (
+                    response.status < 400
+                    and "text/html" in response.headers.get("Content-Type", "").lower()
+                )
+                session_expired = (
+                    response.status in _AUTH_FAILURE_STATUSES
+                    or redirected_to_login
+                    or returned_login_page
+                )
+
+                if session_expired:
                     await response.read()
-                    _LOGGER.warning(
-                        "m2A diagnostic: %s %s returned HTTP %s "
-                        "(retry_auth=%s)",
-                        method,
-                        path,
-                        response.status,
-                        retry_auth,
-                    )
                     if retry_auth:
-                        self._token = None
-                        await self.async_login()
-                        return await self._request_json(
-                            method, path, params=params, retry_auth=False
+                        _LOGGER.debug(
+                            "m2A session expired during %s %s (HTTP %s); "
+                            "renewing credentials and replaying once",
+                            method,
+                            path,
+                            response.status,
                         )
-                    raise M2AAuthError(
-                        f"m2A API rejected authenticated request: HTTP {response.status}"
+                        await self._async_ensure_authenticated(
+                            force=True,
+                            failed_token=token_used,
+                        )
+                        return await self._request_json(
+                            method,
+                            path,
+                            params=params,
+                            retry_auth=False,
+                        )
+
+                    # A fresh login succeeded, but the API still rejected the
+                    # session. This is a transient service/session problem, not
+                    # proof that the stored credentials are wrong.
+                    raise M2AConnectionError(
+                        "m2A session was rejected after automatic renewal"
                     )
 
                 if response.status == 429:
