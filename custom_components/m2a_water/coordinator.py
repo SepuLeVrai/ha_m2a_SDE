@@ -210,8 +210,8 @@ class M2AWaterCoordinator(DataUpdateCoordinator[M2AWaterData]):
         except M2AAuthError as err:
             raise ConfigEntryAuthFailed("Invalid m2A credentials") from err
         except M2ACounterNotFound as err:
-            raise ConfigEntryAuthFailed(
-                f"Configured meter {self._counter_number} is not available"
+            raise ConfigEntryNotReady(
+                f"Configured meter {self._counter_number} is not currently available"
             ) from err
         except M2AConnectionError as err:
             raise ConfigEntryNotReady("Unable to connect to m2A water service") from err
@@ -258,10 +258,12 @@ class M2AWaterCoordinator(DataUpdateCoordinator[M2AWaterData]):
             return self._build_data(payload, current_values, previous_values)
 
         except M2AAuthError as err:
-            raise ConfigEntryAuthFailed("m2A authentication expired") from err
-        except M2ACounterNotFound as err:
             raise ConfigEntryAuthFailed(
-                f"Configured meter {self._counter_number} is no longer available"
+                "Stored m2A credentials were rejected"
+            ) from err
+        except M2ACounterNotFound as err:
+            raise UpdateFailed(
+                f"Configured meter {self._counter_number} is temporarily unavailable"
             ) from err
         except M2AConnectionError as err:
             raise UpdateFailed("Error communicating with m2A water service") from err
@@ -397,11 +399,15 @@ class M2AWaterCoordinator(DataUpdateCoordinator[M2AWaterData]):
                 else:
                     await self._async_recent_history_sync()
             except M2AAuthError as err:
-                _LOGGER.warning("Historical m2A sync stopped: authentication failed")
+                _LOGGER.warning(
+                    "Historical m2A sync stopped: stored credentials were rejected"
+                )
                 raise ConfigEntryAuthFailed from err
             except M2ACounterNotFound as err:
-                _LOGGER.warning("Historical m2A sync stopped: meter not found")
-                raise ConfigEntryAuthFailed from err
+                _LOGGER.warning(
+                    "Historical m2A sync paused: configured meter unavailable (%s)",
+                    err,
+                )
             except M2AConnectionError as err:
                 _LOGGER.warning("Historical m2A sync failed: %s", err)
             except Exception:
